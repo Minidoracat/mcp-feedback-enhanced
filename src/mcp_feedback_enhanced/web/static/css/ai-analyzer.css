@@ -1,0 +1,354 @@
+/**
+ * MCP Feedback Enhanced - AI 分析器样式
+ * ======================================
+ */
+
+/* AI 分析按钮 */
+.btn-ai-analyze {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-ai-analyze:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-ai-analyze:active {
+    transform: translateY(0);
+}
+
+.btn-ai-analyze:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-ai-analyze .ai-icon {
+    font-size: 16px;
+    animation: ai-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ai-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* AI 分析结果容器 */
+.ai-analysis-result {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* AI 分析头部 */
+.ai-analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.ai-analysis-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* 徽章容器 */
+.ai-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-type {
+    background-color: #3498db;
+    color: white;
+}
+
+.badge-severity-high {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.badge-severity-medium {
+    background-color: #f39c12;
+    color: white;
+}
+
+.badge-severity-low {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.badge-risk-high {
+    background-color: #c0392b;
+    color: white;
+}
+
+.badge-risk-medium {
+    background-color: #e67e22;
+    color: white;
+}
+
+.badge-risk-low {
+    background-color: #27ae60;
+    color: white;
+}
+
+.badge-breaking {
+    background-color: #e74c3c;
+    color: white;
+    animation: badge-warning 1.5s ease-in-out infinite;
+}
+
+@keyframes badge-warning {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* AI 分析区块 */
+.ai-section {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ai-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #34495e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ai-section p {
+    margin: 0;
+    line-height: 1.6;
+    color: #555;
+}
+
+.ai-section ul {
+    margin: 8px 0;
+    padding-left: 24px;
+}
+
+.ai-section li {
+    margin: 6px 0;
+    line-height: 1.5;
+    color: #555;
+}
+
+/* Commit 建议区域 */
+.ai-commit-suggestion {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid #667eea;
+}
+
+.commit-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+}
+
+.commit-title code {
+    flex: 1;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #2c3e50;
+    word-break: break-word;
+}
+
+.btn-copy-commit {
+    padding: 6px 12px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+}
+
+.btn-copy-commit:hover {
+    background: #5a67d8;
+    transform: scale(1.05);
+}
+
+.commit-body {
+    margin-top: 12px;
+}
+
+.commit-body pre {
+    margin: 8px 0 0 0;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #2c3e50;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* 问题区域 */
+.ai-issues {
+    border-left: 4px solid #e74c3c;
+}
+
+.ai-issues li {
+    color: #c0392b;
+}
+
+/* 建议区域 */
+.ai-suggestions {
+    border-left: 4px solid #2ecc71;
+}
+
+.ai-suggestions li {
+    color: #27ae60;
+}
+
+/* AI 底部 */
+.ai-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ai-confidence {
+    font-size: 13px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+/* 加载状态 */
+.ai-analyzing {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.ai-analyzing .spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(102, 126, 234, 0.2);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ai-analyzing p {
+    margin-top: 16px;
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+/* 错误状态 */
+.ai-error {
+    background: #fee;
+    border-left: 4px solid #e74c3c;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+}
+
+.ai-error h4 {
+    margin: 0 0 8px 0;
+    color: #c0392b;
+}
+
+.ai-error p {
+    margin: 0;
+    color: #555;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .ai-analysis-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .commit-title {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-copy-commit {
+        margin-left: 0;
+        margin-top: 8px;
+        width: 100%;
+    }
+}
