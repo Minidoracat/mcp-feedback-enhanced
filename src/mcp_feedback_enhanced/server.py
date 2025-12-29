@@ -32,7 +32,7 @@ from typing import Annotated, Any
 
 from fastmcp import FastMCP
 from fastmcp.utilities.types import Image as MCPImage
-from mcp.types import TextContent
+from mcp.types import TextContent, ToolAnnotations
 from pydantic import Field
 
 # 導入統一的調試功能
@@ -426,7 +426,13 @@ def process_images(images_data: list[dict]) -> list[MCPImage]:
 
 
 # ===== MCP 工具定義 =====
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Interactive Feedback",
+        readOnlyHint=False,  # Creates temporary files for feedback storage
+        destructiveHint=False,  # Does not modify or delete user data
+    )
+)
 async def interactive_feedback(
     project_directory: Annotated[str, Field(description="專案目錄路徑")] = ".",
     summary: Annotated[
@@ -559,7 +565,13 @@ async def launch_web_feedback_ui(project_dir: str, summary: str, timeout: int) -
         }
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Get System Info",
+        readOnlyHint=True,  # Only reads system environment information
+        destructiveHint=False,
+    )
+)
 def get_system_info() -> str:
     """
     獲取系統環境資訊
