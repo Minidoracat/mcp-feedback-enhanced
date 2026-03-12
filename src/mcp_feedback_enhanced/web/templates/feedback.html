@@ -632,6 +632,15 @@
                                 style="min-height: 150px;"
                             ></textarea>
 
+                            <!-- 排隊消息預覽（只讀） -->
+                            <div id="queuedMessagePreview" class="queued-preview" style="display: none;">
+                                <div class="queued-preview-header">
+                                    <span class="queued-preview-title" data-i18n="feedback.queuedPreviewTitle">📨 排隊消息預覽</span>
+                                    <button id="cancelQueueBtn" class="queued-preview-cancel" data-i18n="feedback.cancelQueue" title="取消排隊，恢復消息到輸入框">✕ <span data-i18n="feedback.cancelQueue">取消排隊</span></button>
+                                </div>
+                                <div id="queuedMessageContent" class="queued-preview-content"></div>
+                            </div>
+
                             <!-- 提示詞按鈕 - 移至輸入框下方 -->
                             <div class="prompt-input-buttons" id="combinedPromptButtons" style="margin-top: 8px;">
                                 <button type="button" class="prompt-input-btn select-prompt-btn" data-container-index="1">

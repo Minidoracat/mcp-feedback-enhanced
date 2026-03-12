@@ -51,7 +51,14 @@
         "noContent": "没有可复制的内容",
         "copySuccess": "内容已复制到剪贴板",
         "copyFailed": "复制失败",
-        "provideTextOrImage": "请提供反馈文字或上传图片"
+        "provideTextOrImage": "请提供反馈文字或上传图片",
+        "queued": "消息已排队，将在下次会话时自动提交",
+        "queuedBadge": "📨 已排队",
+        "queuedPreviewTitle": "📨 排队消息预览",
+        "cancelQueue": "取消排队",
+        "queuedAutoSubmit": "排队消息已自动提交",
+        "queueFull": "排队已满（最多 1 条消息）",
+        "queueCancelled": "已取消排队，消息已恢复到输入框"
     },
     "summary": {
         "title": "📋 AI 工作摘要",
@@ -214,6 +221,7 @@
         "submit": "✅ 提交反馈",
         "processing": "处理中...",
         "submitted": "已提交",
+        "submitQueue": "📨 排队发送",
         "retry": "重试",
         "close": "关闭",
         "upload": "上传",

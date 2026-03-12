@@ -1029,6 +1029,15 @@ body {
     background: #45a049;
 }
 
+.btn-warning {
+    background: var(--warning-color, #f0ad4e);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #ec971f;
+}
+
 /* 底部操作按鈕 */
 .footer-actions {
     display: flex;
@@ -1469,6 +1478,83 @@ h3.combined-section-title {
     padding: 8px 16px;
     font-size: 13px;
     white-space: nowrap;
+}
+
+/* 排隊消息預覽區域 */
+.queued-preview {
+    margin-top: 8px;
+    border: 1px solid var(--warning-color, #f0ad4e);
+    border-radius: 8px;
+    background: rgba(240, 173, 78, 0.08);
+    overflow: hidden;
+    animation: queueSlideIn 0.25s ease-out;
+}
+
+.queued-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: rgba(240, 173, 78, 0.15);
+    border-bottom: 1px solid rgba(240, 173, 78, 0.25);
+}
+
+.queued-preview-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--warning-color, #f0ad4e);
+    white-space: nowrap;
+}
+
+.queued-preview-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border: 1px solid rgba(240, 173, 78, 0.4);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--warning-color, #f0ad4e);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.queued-preview-cancel:hover {
+    background: rgba(240, 173, 78, 0.2);
+    border-color: var(--warning-color, #f0ad4e);
+}
+
+.queued-preview-content {
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary, #e0e0e0);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-height: 150px;
+    overflow-y: auto;
+    user-select: text;
+}
+
+.btn.has-queue {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes queueSlideIn {
+    from {
+        opacity: 0;
+        max-height: 0;
+        margin-top: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 300px;
+        margin-top: 8px;
+    }
 }
 
 /* 響應式設計 - 小螢幕時垂直排列 */

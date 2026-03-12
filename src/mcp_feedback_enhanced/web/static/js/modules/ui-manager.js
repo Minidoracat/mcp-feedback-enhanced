@@ -244,9 +244,9 @@
                     button.disabled = true;
                     break;
                 case Utils.CONSTANTS.FEEDBACK_SUBMITTED:
-                    button.textContent = window.i18nManager ? window.i18nManager.t('buttons.submitted') : '已提交';
-                    button.className = 'btn btn-success';
-                    button.disabled = true;
+                    button.textContent = window.i18nManager ? window.i18nManager.t('buttons.submitQueue', '📨 排隊發送') : '📨 排隊發送';
+                    button.className = 'btn btn-warning combined-submit-btn';
+                    button.disabled = false;
                     break;
             }
         });

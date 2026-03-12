@@ -53,6 +53,9 @@
         this.isInitialized = false;
         this.pendingSubmission = null;
 
+        // 消息排隊（等待下次 session 時自動提交，最多 1 條純文本）
+        this.queuedMessage = null;
+
         // 初始化防抖函數
         this.initDebounceHandlers();
 
@@ -310,7 +313,13 @@
                 });
             });
 
-            // 取消按鈕事件 - 已移除取消按鈕，保留 ESC 快捷鍵功能
+            // 取消排隊按鈕事件
+            var cancelQueueBtn = window.MCPFeedback.Utils.safeQuerySelector('#cancelQueueBtn');
+            if (cancelQueueBtn) {
+                cancelQueueBtn.addEventListener('click', function() {
+                    self.cancelQueuedMessage();
+                });
+            }
 
             // 命令執行事件
             const runCommandBtn = window.MCPFeedback.Utils.safeQuerySelector('#runCommandBtn');
@@ -888,8 +897,27 @@
                     self.webSocketManager.updateSessionTimeoutSettings(timeoutSettings);
                 }
 
-                // 6. 檢查並啟動自動提交
-                self.checkAndStartAutoSubmit();
+                // 6. 如果有排隊消息，自動提交；否則檢查自動提交
+                if (self.queuedMessage !== null) {
+                    var queuedText = self.queuedMessage;
+                    self.queuedMessage = null;
+                    self.updateQueueUI(false);
+                    console.log('📤 自動提交排隊消息');
+
+                    var textarea = window.MCPFeedback.Utils.safeQuerySelector('#combinedFeedbackText');
+                    if (textarea) {
+                        textarea.value = queuedText;
+                    }
+
+                    var autoMsg = window.i18nManager ?
+                        window.i18nManager.t('feedback.queuedAutoSubmit', '排隊消息已自動提交') :
+                        '排隊消息已自動提交';
+                    window.MCPFeedback.Utils.showMessage(autoMsg, window.MCPFeedback.Utils.CONSTANTS.MESSAGE_SUCCESS);
+
+                    setTimeout(function() { self.submitFeedback(); }, 200);
+                } else {
+                    self.checkAndStartAutoSubmit();
+                }
 
                 console.log('✅ 局部更新完成，頁面已準備好接收新的回饋');
             }, 500);
@@ -1104,8 +1132,16 @@
             return;
         }
 
-        // 收集回饋數據並提交
-        const feedbackData = this.collectFeedbackData();
+        var feedbackState = this.uiManager ? this.uiManager.getFeedbackState() : null;
+
+        // Queue mode: if already submitted, queue the message for next session
+        if (feedbackState === window.MCPFeedback.Utils.CONSTANTS.FEEDBACK_SUBMITTED) {
+            this.enqueueMessage();
+            return;
+        }
+
+        // Normal submit path
+        var feedbackData = this.collectFeedbackData();
         if (!feedbackData) {
             return;
         }
@@ -1117,10 +1153,10 @@
      * 檢查是否可以提交回饋
      */
     FeedbackApp.prototype.canSubmitFeedback = function() {
-        // 簡化檢查：只檢查WebSocket連接，狀態由服務器端驗證
         const wsReady = this.webSocketManager && this.webSocketManager.isReady();
         const feedbackState = this.uiManager ? this.uiManager.getFeedbackState() : null;
         const isWaiting = feedbackState === window.MCPFeedback.Utils.CONSTANTS.FEEDBACK_WAITING;
+        const isSubmitted = feedbackState === window.MCPFeedback.Utils.CONSTANTS.FEEDBACK_SUBMITTED;
 
         console.log('🔍 提交檢查:', {
             wsReady: wsReady,
@@ -1128,7 +1164,96 @@
             feedbackState: feedbackState
         });
 
-        return wsReady && isWaiting;
+        // Allow normal submit when waiting, or queue when already submitted
+        return wsReady && (isWaiting || isSubmitted);
+    };
+
+    /**
+     * 將消息放入排隊（FEEDBACK_SUBMITTED 狀態下調用）
+     */
+    FeedbackApp.prototype.enqueueMessage = function() {
+        var textarea = window.MCPFeedback.Utils.safeQuerySelector('#combinedFeedbackText');
+        var text = textarea ? textarea.value.trim() : '';
+
+        if (!text) {
+            var emptyMsg = window.i18nManager ?
+                window.i18nManager.t('feedback.provideTextOrImage', '請提供回饋文字或上傳圖片') :
+                '請提供回饋文字或上傳圖片';
+            window.MCPFeedback.Utils.showMessage(emptyMsg, window.MCPFeedback.Utils.CONSTANTS.MESSAGE_WARNING);
+            return;
+        }
+
+        if (this.queuedMessage !== null) {
+            var fullMsg = window.i18nManager ?
+                window.i18nManager.t('feedback.queueFull', '排隊已滿（最多 1 條消息）') :
+                '排隊已滿（最多 1 條消息）';
+            window.MCPFeedback.Utils.showMessage(fullMsg, window.MCPFeedback.Utils.CONSTANTS.MESSAGE_WARNING);
+            return;
+        }
+
+        this.queuedMessage = text;
+        textarea.value = '';
+        this.updateQueueUI(true);
+
+        var successMsg = window.i18nManager ?
+            window.i18nManager.t('feedback.queued', '消息已排隊，將在下次會話時自動提交') :
+            '消息已排隊，將在下次會話時自動提交';
+        window.MCPFeedback.Utils.showMessage(successMsg, window.MCPFeedback.Utils.CONSTANTS.MESSAGE_SUCCESS);
+        console.log('📥 消息已排隊，等待下次 session 自動提交');
+    };
+
+    /**
+     * 取消排隊消息，恢復到輸入框
+     */
+    FeedbackApp.prototype.cancelQueuedMessage = function() {
+        if (this.queuedMessage === null) return;
+
+        var textarea = window.MCPFeedback.Utils.safeQuerySelector('#combinedFeedbackText');
+        if (textarea) {
+            textarea.value = this.queuedMessage;
+        }
+
+        this.queuedMessage = null;
+        this.updateQueueUI(false);
+
+        var cancelMsg = window.i18nManager ?
+            window.i18nManager.t('feedback.queueCancelled', '已取消排隊，消息已恢復到輸入框') :
+            '已取消排隊，消息已恢復到輸入框';
+        window.MCPFeedback.Utils.showMessage(cancelMsg, window.MCPFeedback.Utils.CONSTANTS.MESSAGE_INFO);
+        console.log('🔄 排隊消息已取消，恢復到輸入框');
+    };
+
+    /**
+     * 更新排隊 UI 狀態（預覽區域 + 提交按鈕）
+     */
+    FeedbackApp.prototype.updateQueueUI = function(hasQueue) {
+        var preview = document.getElementById('queuedMessagePreview');
+        var contentEl = document.getElementById('queuedMessageContent');
+
+        if (preview) {
+            if (hasQueue && this.queuedMessage !== null) {
+                if (contentEl) {
+                    contentEl.textContent = this.queuedMessage;
+                }
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+                if (contentEl) {
+                    contentEl.textContent = '';
+                }
+            }
+        }
+
+        var submitBtn = window.MCPFeedback.Utils.safeQuerySelector('#submitBtn');
+        if (submitBtn) {
+            if (hasQueue) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('has-queue');
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('has-queue');
+            }
+        }
     };
 
     /**

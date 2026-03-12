@@ -51,7 +51,14 @@
         "noContent": "No content to copy",
         "copySuccess": "Content copied to clipboard",
         "copyFailed": "Failed to copy",
-        "provideTextOrImage": "Please provide feedback text or upload an image"
+        "provideTextOrImage": "Please provide feedback text or upload an image",
+        "queued": "Message queued, will auto-submit on next session",
+        "queuedBadge": "📨 Queued",
+        "queuedPreviewTitle": "📨 Queued Message Preview",
+        "cancelQueue": "Cancel queue",
+        "queuedAutoSubmit": "Queued message auto-submitted",
+        "queueFull": "Queue is full (max 1 message)",
+        "queueCancelled": "Queue cancelled, message restored to input"
     },
     "summary": {
         "title": "📋 AI Work Summary",
@@ -213,6 +220,7 @@
         "submit": "✅ Submit Feedback",
         "processing": "Processing...",
         "submitted": "Submitted",
+        "submitQueue": "📨 Queue to Send",
         "retry": "Retry",
         "close": "Close",
         "upload": "Upload",
