@@ -62,6 +62,7 @@ def setup_routes(manager: "WebUIManager"):
         if not current_session:
             # 沒有活躍會話時顯示等待頁面
             return manager.templates.TemplateResponse(
+                request,
                 "index.html",
                 {
                     "request": request,
@@ -76,6 +77,7 @@ def setup_routes(manager: "WebUIManager"):
         layout_mode = load_user_layout_settings()
 
         return manager.templates.TemplateResponse(
+            request,
             "feedback.html",
             {
                 "request": request,
