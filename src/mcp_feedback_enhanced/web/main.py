@@ -21,6 +21,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from ..debug import web_debug_log as debug_log
 from ..utils.error_handler import ErrorHandler, ErrorType
@@ -213,39 +214,36 @@ class WebUIManager:
         # 添加 Gzip 壓縮中間件
         self.app.add_middleware(GZipMiddleware, minimum_size=config.minimum_size)
 
-        # 添加緩存和壓縮統計中間件
-        @self.app.middleware("http")
-        async def compression_and_cache_middleware(request: Request, call_next):
-            """壓縮和緩存中間件"""
-            response = await call_next(request)
+        # 添加緩存和壓縮統計中間件（使用 BaseHTTPMiddleware 替代已移除的 @app.middleware 裝飾器）
+        class CompressionAndCacheMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request: Request, call_next):
+                response = await call_next(request)
 
-            # 添加緩存頭
-            if not config.should_exclude_path(request.url.path):
-                cache_headers = config.get_cache_headers(request.url.path)
-                for key, value in cache_headers.items():
-                    response.headers[key] = value
+                if not config.should_exclude_path(request.url.path):
+                    cache_headers = config.get_cache_headers(request.url.path)
+                    for key, value in cache_headers.items():
+                        response.headers[key] = value
 
-            # 更新壓縮統計（如果可能）
-            try:
-                content_length = int(response.headers.get("content-length", 0))
-                content_encoding = response.headers.get("content-encoding", "")
-                was_compressed = "gzip" in content_encoding
+                try:
+                    content_length = int(response.headers.get("content-length", 0))
+                    content_encoding = response.headers.get("content-encoding", "")
+                    was_compressed = "gzip" in content_encoding
 
-                if content_length > 0:
-                    # 估算原始大小（如果已壓縮，假設壓縮比為 30%）
-                    original_size = (
-                        content_length
-                        if not was_compressed
-                        else int(content_length / 0.7)
-                    )
-                    compression_manager.update_stats(
-                        original_size, content_length, was_compressed
-                    )
-            except (ValueError, TypeError):
-                # 忽略統計錯誤，不影響正常響應
-                pass
+                    if content_length > 0:
+                        original_size = (
+                            content_length
+                            if not was_compressed
+                            else int(content_length / 0.7)
+                        )
+                        compression_manager.update_stats(
+                            original_size, content_length, was_compressed
+                        )
+                except (ValueError, TypeError):
+                    pass
 
-            return response
+                return response
+
+        self.app.add_middleware(CompressionAndCacheMiddleware)
 
         debug_log("壓縮和緩存中間件設置完成")
 
