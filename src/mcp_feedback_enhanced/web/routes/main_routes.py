@@ -79,6 +79,7 @@ def setup_routes(manager: "WebUIManager"):
             request,
             "feedback.html",
             context={
+                "session_id": current_session.session_id,
                 "project_directory": current_session.project_directory,
                 "summary": current_session.summary,
                 "title": "Interactive Feedback - 回饋收集",
