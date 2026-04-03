@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "MCP Feedback Enhanced",
     "shortDescription": "Interactive feedback and command execution from Codex via MCP",
-    "longDescription": "Enhanced MCP server for interactive user feedback and command execution in AI-assisted development.",
+    "longDescription": "Enhanced MCP server for interactive user feedback and command execution in AI-assisted development, featuring dual interface support (CLI and GUI) and automatic environment detection.",
     "category": "Development",
     "websiteURL": "https://github.com/Minidoracat/mcp-feedback-enhanced"
   }
