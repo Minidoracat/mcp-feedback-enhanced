@@ -1,0 +1,24 @@
+{
+  "name": "mcp-feedback-enhanced",
+  "version": "0.1.0",
+  "description": "Interactive feedback and command execution from Codex via MCP",
+  "author": {
+    "name": "Minidoracat",
+    "url": "https://github.com/Minidoracat/mcp-feedback-enhanced"
+  },
+  "homepage": "https://github.com/Minidoracat/mcp-feedback-enhanced",
+  "repository": "https://github.com/Minidoracat/mcp-feedback-enhanced",
+  "keywords": [
+    "mcp",
+    "codex"
+  ],
+  "mcpServers": "./.mcp.json",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "MCP Feedback Enhanced",
+    "shortDescription": "Interactive feedback and command execution from Codex via MCP",
+    "longDescription": "Enhanced MCP server for interactive user feedback and command execution in AI-assisted development.",
+    "category": "Development",
+    "websiteURL": "https://github.com/Minidoracat/mcp-feedback-enhanced"
+  }
+}
