@@ -270,10 +270,18 @@ def setup_routes(manager: "WebUIManager"):
         debug_log(f"WebSocket 連接建立，語言由前端處理: {lang}")
 
         # 檢查會話是否已有 WebSocket 連接
+        old_ws = None
         if session.websocket and session.websocket != websocket:
-            debug_log("會話已有 WebSocket 連接，替換為新連接")
+            debug_log("會話已有 WebSocket 連接，關閉舊連接並替換為新連接")
+            old_ws = session.websocket
 
         session.websocket = websocket
+
+        if old_ws:
+            try:
+                await old_ws.close(code=4009, reason="replaced_by_another_tab")
+            except Exception:
+                pass
         debug_log(f"WebSocket 連接建立: 當前活躍會話 {session.session_id}")
 
         # 發送連接成功消息
@@ -322,7 +330,13 @@ def setup_routes(manager: "WebUIManager"):
                 if current_session and current_session.websocket == websocket:
                     await handle_websocket_message(manager, current_session, message)
                 else:
-                    debug_log("會話已切換或 WebSocket 連接不匹配，忽略消息")
+                    debug_log("會話已切換或 WebSocket 連接不匹配，關閉連接")
+                    try:
+                        await websocket.close(
+                            code=4009, reason="replaced_by_another_tab"
+                        )
+                    except Exception:
+                        pass
                     break
 
         except WebSocketDisconnect:

@@ -350,6 +350,7 @@
         "connectionError": "Connection error",
         "noActiveSession": "No active session",
         "maxReconnectReached": "WebSocket connection failed, please refresh the page to retry",
+        "replacedByTab": "Already open in another tab",
         "latency": "Latency",
         "connectionTime": "Connection Time",
         "reconnectCount": "Reconnects",

@@ -351,6 +351,7 @@
         "connectionError": "连接错误",
         "noActiveSession": "没有活跃会话",
         "maxReconnectReached": "WebSocket 连接失败，请刷新页面重试",
+        "replacedByTab": "已在其他标签页打开",
         "latency": "延迟",
         "connectionTime": "连线时间",
         "reconnectCount": "重连",

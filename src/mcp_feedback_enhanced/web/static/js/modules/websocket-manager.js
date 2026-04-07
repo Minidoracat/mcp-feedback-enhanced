@@ -192,10 +192,15 @@
 
         // 處理不同的關閉原因
         if (event.code === 4004) {
-            const noActiveSessionMessage = window.i18nManager ? window.i18nManager.t('connectionMonitor.noActiveSession') : '沒有活躍會話';
+            var noActiveSessionMessage = window.i18nManager ? window.i18nManager.t('connectionMonitor.noActiveSession') : '沒有活躍會話';
             this.updateConnectionStatus('disconnected', noActiveSessionMessage);
+        } else if (event.code === 4009) {
+            var replacedMsg = window.i18nManager ?
+                window.i18nManager.t('connectionMonitor.replacedByTab', '已在其他標籤頁開啟') :
+                '已在其他標籤頁開啟';
+            this.updateConnectionStatus('replaced', replacedMsg);
         } else {
-            const disconnectedMessage = window.i18nManager ? window.i18nManager.t('connectionMonitor.disconnected') : '已斷開';
+            var disconnectedMessage = window.i18nManager ? window.i18nManager.t('connectionMonitor.disconnected') : '已斷開';
             this.updateConnectionStatus('disconnected', disconnectedMessage);
             this.handleReconnection(event);
         }
