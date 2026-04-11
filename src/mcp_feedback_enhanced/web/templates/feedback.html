@@ -76,7 +76,8 @@
             max-width: 50%;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* 確保容器不超出範圍 */
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
         }
 
         #tab-combined.active.combined-horizontal .combined-section:last-child {
