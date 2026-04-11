@@ -452,6 +452,22 @@
     };
 
     /**
+     * 為容器內的 table 元素包裝可水平滾動的 wrapper
+     */
+    UIManager.prototype.wrapTablesForScroll = function(container) {
+        var tables = container.querySelectorAll('table');
+        tables.forEach(function(table) {
+            if (table.parentElement && table.parentElement.classList.contains('table-wrapper')) {
+                return;
+            }
+            var wrapper = document.createElement('div');
+            wrapper.className = 'table-wrapper';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+        });
+    };
+
+    /**
      * 更新 AI 摘要內容
      */
     UIManager.prototype.updateAISummaryContent = function(summary) {
@@ -463,17 +479,19 @@
         const renderedContent = this.renderMarkdownSafely(summary);
         console.log('📝 渲染後內容長度:', renderedContent ? renderedContent.length : 'undefined');
 
-        const summaryContent = Utils.safeQuerySelector('#summaryContent');
+        var summaryContent = Utils.safeQuerySelector('#summaryContent');
         if (summaryContent) {
             summaryContent.innerHTML = renderedContent;
+            this.wrapTablesForScroll(summaryContent);
             console.log('✅ 已更新分頁模式摘要內容（Markdown 渲染）');
         } else {
             console.warn('⚠️ 找不到 #summaryContent 元素');
         }
 
-        const combinedSummaryContent = Utils.safeQuerySelector('#combinedSummaryContent');
+        var combinedSummaryContent = Utils.safeQuerySelector('#combinedSummaryContent');
         if (combinedSummaryContent) {
             combinedSummaryContent.innerHTML = renderedContent;
+            this.wrapTablesForScroll(combinedSummaryContent);
             console.log('✅ 已更新合併模式摘要內容（Markdown 渲染）');
         } else {
             console.warn('⚠️ 找不到 #combinedSummaryContent 元素');

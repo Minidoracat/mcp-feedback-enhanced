@@ -188,7 +188,7 @@ def process_feedback(data):
 
 > **重要提示：** 所有 HTML 輸出都經過 DOMPurify 清理，確保安全性。
 
-#### 表格範例
+#### 表格範例（窄表格）
 | 功能 | 狀態 | 說明 |
 |------|------|------|
 | 標題渲染 | ✅ | 支援 H1-H6 |
@@ -196,12 +196,40 @@ def process_feedback(data):
 | 列表功能 | ✅ | 有序/無序列表 |
 | 連結處理 | ✅ | 安全連結渲染 |
 
+#### 寬表格測試（水平滾動）
+| 模組名稱 | 版本號 | 作者 | 授權協議 | 最後更新日期 | 下載次數 | 依賴數量 | 相容性 | 說明描述 | 備註資訊 |
+|----------|--------|------|----------|-------------|---------|---------|--------|----------|----------|
+| marked | 12.0.1 | Christopher Jeffrey | MIT License | 2024-03-15 | 15,234,567 | 0 | Node 16+ | Markdown 解析器和編譯器 | 用於渲染 AI 摘要內容 |
+| dompurify | 3.0.8 | Mario Heiderich | Apache 2.0 | 2024-02-28 | 8,765,432 | 0 | 所有瀏覽器 | XSS 清理工具 | 確保 HTML 安全性 |
+| fastapi | 0.110.0 | Sebastián Ramírez | MIT License | 2024-03-10 | 5,432,100 | 12 | Python 3.8+ | 現代 Web 框架 | 後端 API 服務 |
+
 ---
 
 ### 🔒 安全特性
 - XSS 防護：使用 DOMPurify 清理
 - 白名單標籤：僅允許安全的 HTML 標籤
 - URL 驗證：限制允許的 URL 協議
+
+### 📝 長文字段落測試
+
+這是一段非常長的文字，用於測試當 AI 摘要內容超過可視區域高度時，左側面板是否能夠正確顯示垂直滾動條，同時右側回饋輸入區域保持固定不動。在水平佈局模式下，左側的 AI 工作摘要區域應該獨立滾動，這對於閱讀大量 AI 分析報告非常重要。使用者應該能夠通過鼠標滾輪在左側區域上下滾動，而不會導致整個頁面跟著滾動。
+
+#### 長程式碼行測試
+```python
+# 這是一行非常長的程式碼，用於測試代碼區塊的水平滾動功能
+def very_long_function_name_for_testing_horizontal_scroll(parameter_one, parameter_two, parameter_three, parameter_four, parameter_five, parameter_six, parameter_seven, parameter_eight):
+    result = parameter_one + parameter_two + parameter_three + parameter_four + parameter_five + parameter_six + parameter_seven + parameter_eight
+    return {"status": "success", "message": "This is a very long return value to test horizontal scrolling in code blocks", "data": result, "metadata": {"timestamp": "2024-03-15T10:30:00Z", "version": "1.0.0"}}
+```
+
+#### 更多文字內容
+
+在軟體開發中，良好的 UI/UX 設計對於提升使用者體驗至關重要。當我們處理大量文字內容時，需要確保滾動行為符合使用者的預期。在雙欄佈局中，每個面板應該有獨立的滾動區域，這樣使用者可以在閱讀左側的 AI 分析結果的同時，右側的回饋輸入框始終保持可見，方便隨時輸入回饋意見。
+
+這種設計模式在很多現代 Web 應用中都很常見，例如：
+- **VS Code**：左側檔案樹和右側編輯器各自獨立滾動
+- **Slack**：左側頻道列表和右側聊天訊息各自獨立滾動
+- **GitHub**：程式碼審查時，左右兩側的 diff 各自獨立滾動
 
 ### 📝 測試結果
 如果您能看到上述內容以正確的格式顯示，表示 Markdown 渲染功能運作正常！"""

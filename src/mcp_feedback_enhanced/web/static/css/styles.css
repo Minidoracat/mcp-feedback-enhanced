@@ -2044,17 +2044,30 @@ textarea:-ms-input-placeholder,
     font-size: 13px !important;
 }
 
+/* Markdown 表格包裝器 - 允許寬表格水平滾動 */
+#summaryContent .table-wrapper,
+#combinedSummaryContent .table-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 0.5em 0;
+}
+
+#summaryContent .table-wrapper table,
+#combinedSummaryContent .table-wrapper table {
+    margin: 0 !important;
+}
+
 /* Markdown 表格樣式 - 適應主題顏色 */
 #summaryContent table, #combinedSummaryContent table {
     border-spacing: 0 !important;
     border-collapse: collapse !important;
     display: table !important;
-    width: 100% !important;
+    width: auto !important;
+    min-width: 100% !important;
     margin: 0.5em 0 !important;
     font-variant: tabular-nums !important;
     border: 1px solid var(--border-color) !important;
     border-radius: 6px !important;
-    overflow: hidden !important;
     background-color: var(--bg-primary) !important;
 }
 
