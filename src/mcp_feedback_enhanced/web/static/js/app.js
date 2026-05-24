@@ -20,8 +20,9 @@
      */
     function FeedbackApp(sessionId) {
         // 會話信息
-        this.sessionId = sessionId;
-        this.currentSessionId = null;
+        const urlSessionId = new URLSearchParams(window.location.search).get('session_id');
+        this.sessionId = sessionId || urlSessionId || null;
+        this.currentSessionId = this.sessionId;
 
         // 模組管理器
         this.tabManager = null;
@@ -209,6 +210,7 @@
                         self.webSocketManager = new window.MCPFeedback.WebSocketManager({
                             tabManager: self.tabManager,
                             connectionMonitor: self.connectionMonitor,
+                            sessionId: self.currentSessionId,
                             onOpen: function() {
                                 self.handleWebSocketOpen();
                             },
@@ -1683,7 +1685,10 @@
 
         const self = this;
 
-        fetch('/api/current-session')
+        const sessionQuery = this.currentSessionId
+            ? '?session_id=' + encodeURIComponent(this.currentSessionId)
+            : '';
+        fetch('/api/current-session' + sessionQuery)
             .then(function(response) {
                 if (!response.ok) {
                     throw new Error('API 請求失敗: ' + response.status);

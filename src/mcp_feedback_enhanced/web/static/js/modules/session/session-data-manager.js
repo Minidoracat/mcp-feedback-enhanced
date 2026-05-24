@@ -399,7 +399,13 @@
      */
     SessionDataManager.prototype.sendUserMessageToServer = function(userMessage) {
         const lang = window.i18nManager ? window.i18nManager.getCurrentLanguage() : 'zh-TW';
-        fetch('/api/add-user-message?lang=' + lang, {
+        const sessionId = this.currentSession && this.currentSession.session_id ? this.currentSession.session_id : null;
+        const queryParams = new URLSearchParams();
+        queryParams.set('lang', lang);
+        if (sessionId) {
+            queryParams.set('session_id', sessionId);
+        }
+        fetch('/api/add-user-message?' + queryParams.toString(), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

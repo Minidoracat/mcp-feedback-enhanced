@@ -43,6 +43,7 @@
         // 待處理的提交
         this.pendingSubmission = null;
         this.sessionUpdatePending = false;
+        this.sessionId = options.sessionId || null;
 
         // 網路狀態檢測
         this.networkOnline = navigator.onLine;
@@ -83,9 +84,14 @@
                 this.websocket = null;
             }
 
-            // 添加語言參數到 WebSocket URL
+            // 添加語言與會話參數到 WebSocket URL
             const language = window.i18nManager ? window.i18nManager.getCurrentLanguage() : 'zh-TW';
-            const wsUrlWithLang = wsUrl + (wsUrl.includes('?') ? '&' : '?') + 'lang=' + language;
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = this.sessionId || urlParams.get('session_id');
+            let wsUrlWithLang = wsUrl + (wsUrl.includes('?') ? '&' : '?') + 'lang=' + encodeURIComponent(language);
+            if (sessionId) {
+                wsUrlWithLang += '&session_id=' + encodeURIComponent(sessionId);
+            }
             this.websocket = new WebSocket(wsUrlWithLang);
             this.setupWebSocketEvents();
 
