@@ -117,8 +117,10 @@ class WebUIManager:
         # 全局標籤頁狀態管理 - 跨會話保持
         self.global_active_tabs: dict[str, dict] = {}
 
-        # 會話更新通知標記
-        self._pending_session_update = False
+        # 會話更新通知標記（按會話追蹤）
+        self._pending_session_updates: set[str] = set()
+        # 工作區最新會話映射（key: project_directory）
+        self.workspace_current_sessions: dict[str, str] = {}
 
         # 會話清理統計
         self.cleanup_stats: dict[str, Any] = {
@@ -326,10 +328,21 @@ class WebUIManager:
         else:
             raise RuntimeError(f"Templates directory not found: {web_templates_path}")
 
+    def _workspace_key(self, project_directory: str) -> str:
+        """生成工作區 key（用於多工作區並行會話）"""
+        return str(Path(project_directory).resolve())
+
+    def get_session_by_id(self, session_id: str | None) -> WebFeedbackSession | None:
+        """根據 session_id 取得會話，若未提供則回退到當前活躍會話"""
+        if session_id:
+            return self.sessions.get(session_id)
+        return self.current_session
+
     def create_session(self, project_directory: str, summary: str) -> str:
-        """創建新的回饋會話 - 重構為單一活躍會話模式，保留標籤頁狀態"""
-        # 保存舊會話的引用和 WebSocket 連接
-        old_session = self.current_session
+        """創建新的回饋會話 - 支援多工作區並行會話"""
+        workspace_key = self._workspace_key(project_directory)
+        old_session_id = self.workspace_current_sessions.get(workspace_key)
+        old_session = self.sessions.get(old_session_id) if old_session_id else None
         old_websocket = None
         if old_session and old_session.websocket:
             old_websocket = old_session.websocket
@@ -377,8 +390,9 @@ class WebUIManager:
         # 將全局標籤頁狀態繼承到新會話
         session.active_tabs = self.global_active_tabs.copy()
 
-        # 設置為當前活躍會話
+        # 設置為當前活躍會話，並更新工作區映射
         self.current_session = session
+        self.workspace_current_sessions[workspace_key] = session_id
         # 同時保存到字典中以保持向後兼容
         self.sessions[session_id] = session
 
@@ -391,9 +405,9 @@ class WebUIManager:
             session.websocket = old_websocket
             debug_log("已將舊 WebSocket 連接轉移到新會話")
         else:
-            # 沒有舊連接，標記需要發送會話更新通知（當新 WebSocket 連接建立時）
-            self._pending_session_update = True
-            debug_log("沒有舊 WebSocket 連接，設置待更新標記")
+            # 沒有舊連接，標記該會話需要發送更新通知（當該會話 WebSocket 連接建立時）
+            self._pending_session_updates.add(session_id)
+            debug_log(f"沒有舊 WebSocket 連接，設置待更新標記: {session_id}")
 
         return session_id
 
@@ -409,8 +423,12 @@ class WebUIManager:
         """移除回饋會話"""
         if session_id in self.sessions:
             session = self.sessions[session_id]
+            workspace_key = self._workspace_key(session.project_directory)
             session.cleanup()
             del self.sessions[session_id]
+            self._pending_session_updates.discard(session_id)
+            if self.workspace_current_sessions.get(workspace_key) == session_id:
+                self.workspace_current_sessions.pop(workspace_key, None)
 
             # 如果移除的是當前活躍會話，清空當前會話
             if self.current_session and self.current_session.session_id == session_id:
@@ -423,12 +441,16 @@ class WebUIManager:
         """清空當前活躍會話"""
         if self.current_session:
             session_id = self.current_session.session_id
+            workspace_key = self._workspace_key(self.current_session.project_directory)
             self.current_session.cleanup()
             self.current_session = None
 
             # 同時從字典中移除
             if session_id in self.sessions:
                 del self.sessions[session_id]
+            self._pending_session_updates.discard(session_id)
+            if self.workspace_current_sessions.get(workspace_key) == session_id:
+                self.workspace_current_sessions.pop(workspace_key, None)
 
             debug_log("已清空當前活躍會話")
 
@@ -887,6 +909,10 @@ class WebUIManager:
                     ):
                         self.current_session = None
                         debug_log("清空過期的當前活躍會話")
+                    self._pending_session_updates.discard(session_id)
+                    workspace_key = self._workspace_key(session.project_directory)
+                    if self.workspace_current_sessions.get(workspace_key) == session_id:
+                        self.workspace_current_sessions.pop(workspace_key, None)
 
             except Exception as e:
                 error_id = ErrorHandler.log_error_with_context(
@@ -971,6 +997,10 @@ class WebUIManager:
                 ):
                     self.current_session = None
                     debug_log("因內存壓力清空當前活躍會話")
+                self._pending_session_updates.discard(session_id)
+                workspace_key = self._workspace_key(session.project_directory)
+                if self.workspace_current_sessions.get(workspace_key) == session_id:
+                    self.workspace_current_sessions.pop(workspace_key, None)
 
             except Exception as e:
                 error_id = ErrorHandler.log_error_with_context(
@@ -1060,6 +1090,8 @@ class WebUIManager:
 
         self.sessions.clear()
         self.current_session = None
+        self._pending_session_updates.clear()
+        self.workspace_current_sessions.clear()
 
         # 更新統計
         cleanup_duration = time.time() - cleanup_start_time
@@ -1113,7 +1145,7 @@ async def launch_web_feedback_ui(
     manager = get_web_ui_manager()
 
     # 創建新會話（每次AI調用都應該創建新會話）
-    manager.create_session(project_directory, summary)
+    session_id = manager.create_session(project_directory, summary)
     session = manager.get_current_session()
 
     if not session:
@@ -1127,7 +1159,7 @@ async def launch_web_feedback_ui(
     desktop_mode = os.environ.get("MCP_DESKTOP_MODE", "").lower() == "true"
 
     # 使用根路徑 URL
-    feedback_url = manager.get_server_url()  # 直接使用根路徑
+    feedback_url = f"{manager.get_server_url()}/?session_id={session_id}"
 
     if desktop_mode:
         # 桌面模式：啟動桌面應用程式

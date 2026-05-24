@@ -93,6 +93,77 @@
     };
 
     /**
+     * 獲取實時會話列表
+     */
+    SessionDataManager.prototype.fetchRealtimeSessions = function(lang) {
+        return fetch('/api/all-sessions?lang=' + lang)
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('獲取實時會話狀態失敗: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data && Array.isArray(data.sessions)) {
+                    return data.sessions;
+                }
+                throw new Error('實時會話狀態回應格式錯誤');
+            });
+    };
+
+    /**
+     * 從歷史文件獲取會話列表
+     */
+    SessionDataManager.prototype.fetchHistorySessions = function(lang) {
+        return fetch('/api/load-session-history?lang=' + lang)
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('伺服器回應錯誤: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data && Array.isArray(data.sessions)) {
+                    return data.sessions;
+                }
+                return [];
+            });
+    };
+
+    /**
+     * 按 session_id 合併會話，優先使用實時數據，保留歷史中的完整記錄
+     */
+    SessionDataManager.prototype.mergeSessionsById = function(historySessions, realtimeSessions) {
+        const sessionMap = new Map();
+
+        historySessions.forEach(function(session) {
+            if (session && session.session_id) {
+                sessionMap.set(session.session_id, session);
+            }
+        });
+
+        realtimeSessions.forEach(function(session) {
+            if (!session || !session.session_id) {
+                return;
+            }
+
+            const existing = sessionMap.get(session.session_id);
+            if (existing) {
+                // 實時資料覆蓋狀態類欄位，保留歷史資料中的補充欄位
+                sessionMap.set(session.session_id, Object.assign({}, existing, session));
+            } else {
+                sessionMap.set(session.session_id, session);
+            }
+        });
+
+        return Array.from(sessionMap.values()).sort(function(a, b) {
+            const aTime = a.created_at || a.saved_at || 0;
+            const bTime = b.created_at || b.saved_at || 0;
+            return bTime - aTime;
+        });
+    };
+
+    /**
      * 合併會話數據
      */
     SessionDataManager.prototype.mergeSessionData = function(existingData, newData) {
@@ -632,45 +703,39 @@
      */
     SessionDataManager.prototype.loadFromServer = function() {
         const self = this;
-
-        // 首先嘗試獲取實時會話狀態
         const lang = window.i18nManager ? window.i18nManager.getCurrentLanguage() : 'zh-TW';
-        fetch('/api/all-sessions?lang=' + lang)
-            .then(function(response) {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('獲取實時會話狀態失敗: ' + response.status);
-                }
-            })
-            .then(function(data) {
-                if (data && Array.isArray(data.sessions)) {
-                    // 使用實時會話狀態
-                    self.sessionHistory = data.sessions;
-                    console.log('📊 從伺服器載入', self.sessionHistory.length, '個實時會話狀態');
 
-                    // 載入完成後進行清理和統計更新
-                    self.cleanupExpiredSessions();
-                    self.updateStats();
+        Promise.allSettled([
+            self.fetchRealtimeSessions(lang),
+            self.fetchHistorySessions(lang)
+        ]).then(function(results) {
+            const realtimeResult = results[0];
+            const historyResult = results[1];
 
-                    // 觸發歷史記錄變更回調
-                    if (self.onHistoryChange) {
-                        self.onHistoryChange(self.sessionHistory);
-                    }
+            const realtimeSessions = realtimeResult.status === 'fulfilled' ? realtimeResult.value : [];
+            const historySessions = historyResult.status === 'fulfilled' ? historyResult.value : [];
 
-                    // 觸發資料變更回調
-                    if (self.onDataChanged) {
-                        self.onDataChanged();
-                    }
-                } else {
-                    console.warn('📊 實時會話狀態回應格式錯誤，回退到歷史文件');
-                    self.loadFromHistoryFile();
-                }
-            })
-            .catch(function(error) {
-                console.warn('📊 獲取實時會話狀態失敗，回退到歷史文件:', error);
-                self.loadFromHistoryFile();
-            });
+            if (realtimeResult.status === 'rejected') {
+                console.warn('📊 獲取實時會話狀態失敗:', realtimeResult.reason);
+            }
+            if (historyResult.status === 'rejected') {
+                console.warn('📊 載入歷史文件失敗:', historyResult.reason);
+            }
+
+            self.sessionHistory = self.mergeSessionsById(historySessions, realtimeSessions);
+            console.log('📊 初始化會話資料完成：歷史', historySessions.length, '個，實時', realtimeSessions.length, '個，合併後', self.sessionHistory.length, '個');
+
+            self.cleanupExpiredSessions();
+            self.updateStats();
+
+            if (self.onHistoryChange) {
+                self.onHistoryChange(self.sessionHistory);
+            }
+
+            if (self.onDataChanged) {
+                self.onDataChanged();
+            }
+        });
     };
 
     /**
