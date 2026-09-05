@@ -31,7 +31,7 @@ classifiers = [
 # starlette 為直接依賴（web/main.py 匯入 starlette.websockets，
 # 且其 TemplateResponse 簽名變更曾造成 Web UI 500）。
 dependencies = [
-    "fastmcp>=2.0.0,<4",
+    "fastmcp>=4.0.3,<5",
     "psutil>=7.0.0,<8",
     "fastapi>=0.115.0,<1",
     "starlette>=0.29.0,<2",
