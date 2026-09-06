@@ -20,7 +20,7 @@ path = "src/main.rs"
 [dependencies]
 # Tauri 核心依賴
 tauri = { version = "2.2.1", features = ["custom-protocol"] }
-tauri-plugin-shell = "2.2"
+tauri-plugin-shell = "2.2.1"
 
 # PyO3 用於 Python 綁定
 # 0.29 修復 GHSA-36hh-v3qg-5jq4 (high)、GHSA-chgr-c6px-7xpp (medium)、
