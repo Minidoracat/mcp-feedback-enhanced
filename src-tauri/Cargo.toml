@@ -19,24 +19,24 @@ path = "src/main.rs"
 
 [dependencies]
 # Tauri 核心依賴（下限為 OSV 記錄的最後一個漏洞修補版本，避免 renovate 逐個漏洞開 PR）
-tauri = { version = "2.11.1", features = ["custom-protocol"] }
-tauri-plugin-shell = "2.2.1"
+tauri = { version = "2.11.2", features = ["custom-protocol"] }
+tauri-plugin-shell = "2.2.2"
 
 # PyO3 用於 Python 綁定
 # 0.29 修復 GHSA-36hh-v3qg-5jq4 (high)、GHSA-chgr-c6px-7xpp (medium)、
 # GHSA-pph8-gcv7-4qj5 (low)
-pyo3 = { version = "0.29.1", features = ["extension-module"] }
+pyo3 = { version = "0.29.2", features = ["extension-module"] }
 
 # 序列化支援
-serde = { version = "1.0.1", features = ["derive"] }
-serde_json = "1.0.1"
+serde = { version = "1.0.2", features = ["derive"] }
+serde_json = "1.0.2"
 
 # 異步運行時
 tokio = { version = "1.44.2", features = ["full"] }
 
 # 日誌記錄
-log = "0.4.1"
-env_logger = "0.11.1"
+log = "0.4.2"
+env_logger = "0.11.2"
 
 [build-dependencies]
 tauri-build = { version = "2.2", features = [] }
