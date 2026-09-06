@@ -4,7 +4,7 @@ version = "2.4.3"
 description = "Desktop application extension for MCP Feedback Enhanced"
 requires-python = ">=3.11"
 dependencies = [
-    "mcp-feedback-enhanced>=2.4.3"
+    "mcp-feedback-enhanced>=2.5.0"
 ]
 
 [project.entry-points.pytauri]
