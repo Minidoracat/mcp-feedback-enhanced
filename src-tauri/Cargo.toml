@@ -25,18 +25,18 @@ tauri-plugin-shell = "2.2"
 # PyO3 用於 Python 綁定
 # 0.29 修復 GHSA-36hh-v3qg-5jq4 (high)、GHSA-chgr-c6px-7xpp (medium)、
 # GHSA-pph8-gcv7-4qj5 (low)
-pyo3 = { version = "0.29", features = ["extension-module"] }
+pyo3 = { version = "0.29.1", features = ["extension-module"] }
 
 # 序列化支援
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = { version = "1.0.1", features = ["derive"] }
+serde_json = "1.0.1"
 
 # 異步運行時
 tokio = { version = "1.0", features = ["full"] }
 
 # 日誌記錄
-log = "0.4"
-env_logger = "0.11"
+log = "0.4.1"
+env_logger = "0.11.1"
 
 [build-dependencies]
 tauri-build = { version = "2.2", features = [] }
