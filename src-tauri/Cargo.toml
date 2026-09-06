@@ -32,7 +32,7 @@ serde = { version = "1.0.1", features = ["derive"] }
 serde_json = "1.0.1"
 
 # 異步運行時
-tokio = { version = "1.0.2", features = ["full"] }
+tokio = { version = "1.38.2", features = ["full"] }
 
 # 日誌記錄
 log = "0.4.1"
