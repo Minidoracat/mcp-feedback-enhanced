@@ -13,7 +13,6 @@ Gatekeeper 擋下、啟動後隨即退出）時，舊版什麼介面都不開：
 5. 瀏覽器也開不了時，網址無條件印到 stderr
 """
 
-import io
 import subprocess
 import sys
 import time
@@ -74,6 +73,7 @@ class TestDesktopUnavailableFallsBackToWeb:
     ):
         manager, project_dir, opened = desktop_env
         make_desktop_unavailable(monkeypatch)
+        monkeypatch.setenv("MCP_DEBUG", "false")  # 提示不得只存在於 debug log
 
         await web_main.launch_web_feedback_ui(project_dir, "摘要", timeout=60)
 
@@ -81,9 +81,10 @@ class TestDesktopUnavailableFallsBackToWeb:
         assert "MCP_DESKTOP_MODE" not in web_main.os.environ, (
             "本 process 應改走 Web 模式"
         )
-        assert manager.get_server_url() in capsys.readouterr().err, (
-            "降級必須無條件告知使用者（不依賴 MCP_DEBUG）"
-        )
+        err = capsys.readouterr().err
+        assert manager.get_server_url() in err, "降級必須無條件告知使用者"
+        assert "桌面應用程式無法啟動" in err, "失敗原因必須讓使用者看到"
+        assert "mcp_feedback_enhanced_desktop" in err, "要帶出具體原因，不是固定文案"
 
     @pytest.mark.asyncio
     async def test_second_call_reuses_existing_tab_instead_of_retrying_desktop(
@@ -124,28 +125,56 @@ class TestHealthyDesktopDoesNotTouchBrowser:
         assert web_main.os.environ.get("MCP_DESKTOP_MODE") == "true"
 
 
+@pytest.fixture
+def fake_desktop_binary(monkeypatch, tmp_path):
+    """讓 launch_tauri_app 找到一個假的平台 binary，測試不依賴入庫的真 binary"""
+    import platform
+
+    from mcp_feedback_enhanced import desktop_release
+
+    names = {
+        "windows": "mcp-feedback-enhanced-desktop.exe",
+        "darwin": "mcp-feedback-enhanced-desktop-macos-arm64",
+        "linux": "mcp-feedback-enhanced-desktop-linux",
+    }
+    (
+        tmp_path / names.get(platform.system().lower(), "mcp-feedback-enhanced-desktop")
+    ).touch()
+    (tmp_path / "mcp-feedback-enhanced-desktop-macos-intel").touch()
+    monkeypatch.setattr(desktop_release, "__file__", str(tmp_path / "__init__.py"))
+
+
+def popen_returning(process, monkeypatch):
+    """只在啟動桌面 binary 時回傳替身；platform.system() 等內部 Popen 照常"""
+    real_popen = subprocess.Popen
+
+    def popen(args, *a, **k):
+        if isinstance(args, list) and "mcp-feedback-enhanced-desktop" in args[0]:
+            return process
+        return real_popen(args, *a, **k)
+
+    monkeypatch.setattr(subprocess, "Popen", popen)
+
+
 class TestNativeEarlyExitIsLaunchFailure:
     @pytest.mark.asyncio
-    async def test_process_exiting_during_startup_raises(self, monkeypatch):
-        """Popen 成功但 native 隨即退出（Defender／glibc／Gatekeeper）不能被當成啟動成功"""
+    async def test_non_zero_exit_during_startup_raises(
+        self, monkeypatch, fake_desktop_binary
+    ):
+        """Popen 成功但 native 隨即失敗退出（Defender／glibc／Gatekeeper）不能被當成啟動成功"""
         from mcp_feedback_enhanced.desktop_app import desktop_app
 
         class ExitedProcess:
-            stderr = io.BytesIO(
-                b"error while loading shared libraries: GLIBC_2.39 not found"
-            )
-
             def poll(self):
                 return 127
 
-        real_popen = subprocess.Popen
+            def communicate(self, timeout=None):
+                return (
+                    b"",
+                    b"error while loading shared libraries: GLIBC_2.39 not found",
+                )
 
-        def popen_only_for_desktop(args, *a, **k):
-            if isinstance(args, list) and "mcp-feedback-enhanced-desktop" in args[0]:
-                return ExitedProcess()
-            return real_popen(args, *a, **k)  # platform.system() 等內部呼叫照常
-
-        monkeypatch.setattr(subprocess, "Popen", popen_only_for_desktop)
+        popen_returning(ExitedProcess(), monkeypatch)
         monkeypatch.setattr(desktop_app.asyncio, "sleep", _no_sleep)
 
         app = desktop_app.DesktopApp()
@@ -153,12 +182,70 @@ class TestNativeEarlyExitIsLaunchFailure:
             await app.launch_tauri_app("http://127.0.0.1:8765")
         assert app.app_handle is None
 
+    @pytest.mark.asyncio
+    async def test_stderr_held_by_descendant_does_not_hang(
+        self, monkeypatch, fake_desktop_binary
+    ):
+        """WebView 等後代程序握著 stderr 寫端時，讀尾段有上限，逾時只報 exit code"""
+        from mcp_feedback_enhanced.desktop_app import desktop_app
+
+        class HangingStderr:
+            """像真實 Popen：有 timeout 就在期限內拋 TimeoutExpired，沒有就一直等後代關閉 pipe"""
+
+            def poll(self):
+                return 1
+
+            def communicate(self, timeout=None):
+                if timeout is None:
+                    time.sleep(3)  # 模擬後代握著 stderr：無上限讀取會卡在這裡
+                    return b"", b""
+                time.sleep(min(timeout, 3))
+                raise subprocess.TimeoutExpired(cmd="desktop", timeout=timeout)
+
+        popen_returning(HangingStderr(), monkeypatch)
+        monkeypatch.setattr(desktop_app.asyncio, "sleep", _no_sleep)
+
+        app = desktop_app.DesktopApp()
+        start = time.monotonic()
+        with pytest.raises(RuntimeError, match=r"exit code 1"):
+            await app.launch_tauri_app("http://127.0.0.1:8765")
+        assert time.monotonic() - start < 2.5, "讀取 stderr 尾段必須有上限"
+
+    @pytest.mark.asyncio
+    async def test_clean_exit_during_startup_is_not_failure(
+        self, monkeypatch, fake_desktop_binary
+    ):
+        """使用者在觀察期內自己關掉視窗（exit 0）沿用既有語意，不能被降級成 Web"""
+        from mcp_feedback_enhanced.desktop_app import desktop_app
+
+        class ClosedByUser:
+            def poll(self):
+                return 0
+
+        popen_returning(ClosedByUser(), monkeypatch)
+        monkeypatch.setattr(desktop_app.asyncio, "sleep", _no_sleep)
+
+        app = desktop_app.DesktopApp()
+        await app.launch_tauri_app("http://127.0.0.1:8765")
+        assert app.app_handle is not None
+
+
+def test_launcher_copies_stay_identical():
+    """build_desktop.py 會用 src-tauri/python 覆蓋發佈版；兩份漂移過一次，用位元組比對守住"""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    shipped = root / "src/mcp_feedback_enhanced/desktop_app/desktop_app.py"
+    source = root / "src-tauri/python/mcp_feedback_enhanced_desktop/desktop_app.py"
+    assert shipped.read_bytes() == source.read_bytes()
+
 
 class TestBrowserOpenFailureIsSurfaced:
     def test_false_from_webbrowser_prints_url_to_stderr(
         self, web_ui_manager, monkeypatch, capsys
     ):
         monkeypatch.delenv("MCP_DESKTOP_MODE", raising=False)
+        monkeypatch.setenv("MCP_DEBUG", "false")
         monkeypatch.setattr(webbrowser, "open", lambda url, *a, **k: False)
 
         assert web_ui_manager.open_browser("http://127.0.0.1:9999") is False

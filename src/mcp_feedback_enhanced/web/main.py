@@ -23,6 +23,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from ..debug import user_notice
 from ..debug import web_debug_log as debug_log
 from ..utils.error_handler import ErrorHandler, ErrorType
 from ..utils.memory_monitor import get_memory_monitor
@@ -612,7 +613,7 @@ class WebUIManager:
         time.sleep(2)
 
     def open_browser(self, url: str) -> bool:
-        """開啟瀏覽器；失敗時無條件印到 stderr 附上網址，讓使用者能手動開啟"""
+        """開啟瀏覽器；失敗時無條件提示使用者附上網址，讓使用者能手動開啟"""
         try:
             opened = get_browser_opener()(url)
         except Exception as e:
@@ -621,9 +622,7 @@ class WebUIManager:
         if opened:
             debug_log(f"已開啟瀏覽器：{url}")
         else:
-            sys.stderr.write(
-                f"[mcp-feedback-enhanced] 無法自動開啟瀏覽器，請手動開啟：{url}\n"
-            )
+            user_notice(f"無法自動開啟瀏覽器，請手動開啟：{url}")
         return opened
 
     async def smart_open_browser(self, url: str) -> bool:
@@ -717,7 +716,8 @@ class WebUIManager:
             return True
 
         except Exception as e:
-            debug_log(f"桌面應用程式啟動失敗: {e}")
+            # 原因要讓使用者看到：Defender 隔離、glibc、Gatekeeper 三者處置完全不同
+            user_notice(f"桌面應用程式無法啟動：{e}")
             return False
 
     def close_desktop_app(self):
@@ -1133,10 +1133,7 @@ async def launch_web_feedback_ui(
         # 本 process 改走 Web 模式。清掉環境變數是唯一的狀態來源——之後每次呼叫
         # 都走 smart_open_browser（含活躍分頁偵測與會話更新通知），不會每次再試桌面、
         # 再開一個新分頁。重啟 MCP server 會重新讀 IDE 設定再試桌面。
-        sys.stderr.write(
-            "[mcp-feedback-enhanced] 桌面應用程式無法啟動，本次改用瀏覽器介面："
-            f"{feedback_url}\n"
-        )
+        user_notice(f"本次改用瀏覽器介面：{feedback_url}")
         os.environ.pop("MCP_DESKTOP_MODE", None)
         desktop_mode = False
 
