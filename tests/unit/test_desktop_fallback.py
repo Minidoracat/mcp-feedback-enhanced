@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 import webbrowser
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -48,10 +49,13 @@ def desktop_env(monkeypatch, web_ui_manager, test_project_dir):
     monkeypatch.setattr(web_main, "get_web_ui_manager", lambda: web_ui_manager)
     monkeypatch.setattr(web_ui_manager, "start_server", lambda: None)
 
-    async def fake_wait(self, timeout=600):
-        return {"interactive_feedback": "", "images": [], "settings": {}}
-
-    monkeypatch.setattr(WebFeedbackSession, "wait_for_feedback", fake_wait)
+    monkeypatch.setattr(
+        WebFeedbackSession,
+        "wait_for_feedback",
+        AsyncMock(
+            return_value={"interactive_feedback": "", "images": [], "settings": {}}
+        ),
+    )
 
     opened: list[str] = []
     monkeypatch.setattr(

@@ -1137,11 +1137,8 @@ async def launch_web_feedback_ui(
         os.environ.pop("MCP_DESKTOP_MODE", None)
         desktop_mode = False
 
-    if desktop_mode:
-        has_active_tabs = True  # 桌面殼本身就是介面
-    else:
-        # Web 模式：智能開啟瀏覽器
-        has_active_tabs = await manager.smart_open_browser(feedback_url)
+    # 桌面殼本身就是介面；Web 模式才智能開啟瀏覽器（含活躍分頁偵測）
+    has_active_tabs = desktop_mode or await manager.smart_open_browser(feedback_url)
 
     debug_log(f"[DEBUG] 服務器地址: {feedback_url}")
 

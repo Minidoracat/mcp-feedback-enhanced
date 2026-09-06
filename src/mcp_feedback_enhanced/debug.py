@@ -35,7 +35,7 @@ def _write_stderr(prefix: str, message: Any) -> None:
     if stream is None:
         return
     try:
-        line = f"[{prefix}] {message if isinstance(message, str) else str(message)}"
+        line = f"[{prefix}] {message}"
         try:
             print(line, file=stream, flush=True)
         except UnicodeEncodeError:
