@@ -33,7 +33,7 @@ classifiers = [
 # 且其 TemplateResponse 簽名變更曾造成 Web UI 500）。
 dependencies = [
     "fastmcp>=4.0.3,<5",
-    "psutil>=7.0.0,<8",
+    "psutil>=7.1.0,<8",
     "fastapi>=0.115.1,<1",
     "starlette>=1.3.1,<2",
     "uvicorn>=0.30.1,<1",
