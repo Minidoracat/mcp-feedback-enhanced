@@ -39,14 +39,14 @@ class TestProcessImagesOutputType:
         """不得再回傳 fastmcp 的 Image 型別（會觸發 output validation 錯誤）"""
         result = process_images([{"data": PNG_BYTES, "name": "shot.png"}])
 
-        assert type(result[0]).__module__.startswith("mcp.types"), (
+        assert type(result[0]) is ImageContent, (
             f"預期 mcp.types.ImageContent，實際為 {type(result[0])}"
         )
 
-    def test_serializes_without_structured_output(self):
-        """model_dump 必須產生 MCP content block 欄位"""
+    def test_serializes_to_wire_format(self):
+        """序列化後必須是 MCP content block 的 wire 欄位（camelCase）"""
         result = process_images([{"data": PNG_BYTES, "name": "shot.png"}])
-        dumped = result[0].model_dump()
+        dumped = result[0].model_dump(by_alias=True)
 
         assert dumped["type"] == "image"
         assert dumped["mimeType"] == "image/png"
@@ -91,17 +91,17 @@ class TestMimeTypeDetection:
 
         result = process_images(images)
 
-        assert [c.mimeType for c in result] == list(cases.values())
+        assert [c.mime_type for c in result] == list(cases.values())
 
     def test_unknown_extension_defaults_to_png(self):
         result = process_images([{"data": PNG_BYTES, "name": "weird.bin"}])
 
-        assert result[0].mimeType == "image/png"
+        assert result[0].mime_type == "image/png"
 
     def test_extension_is_case_insensitive(self):
         result = process_images([{"data": PNG_BYTES, "name": "SHOT.JPEG"}])
 
-        assert result[0].mimeType == "image/jpeg"
+        assert result[0].mime_type == "image/jpeg"
 
 
 class TestInvalidInputHandling:
@@ -170,7 +170,7 @@ class TestSessionToServerContract:
 
             assert len(result) == 1
             assert isinstance(result[0], ImageContent)
-            assert result[0].mimeType == "image/png"
+            assert result[0].mime_type == "image/png"
             assert base64.b64decode(result[0].data) == PNG_BYTES
         finally:
             session._cleanup_sync()

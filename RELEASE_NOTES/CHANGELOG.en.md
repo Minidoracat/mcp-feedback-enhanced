@@ -2,6 +2,17 @@
 
 This document records all version updates for **MCP Feedback Enhanced**.
 
+## [Unreleased] - Upgrade to fastmcp 4 / mcp 2
+
+### 🔧 Other Changes
+- **Upgraded `fastmcp` to 4.x and `mcp` to 2.x** (supersedes renovate [#239](https://github.com/Minidoracat/mcp-feedback-enhanced/pull/239) and [#240](https://github.com/Minidoracat/mcp-feedback-enhanced/pull/240)): mcp 1.x and fastmcp 3.x are now in security-fix-only maintenance mode. fastmcp 4 depends on `mcp>=2,<3`, so the two must move together — merging only one leaves the dependency set unresolvable and the package uninstallable (same failure class as #213/#217/#221/#228). The only server-side change is constructing `ImageContent` with mcp 2's canonical field name `mime_type`; the wire format is still `mimeType`. Verified `list_tools`/`get_system_info` over stdio, and the integration tests using a legacy-protocol (2024-11-05) client all pass.
+- **Fixed the age boundary in `ResourceManager.cleanup_temp_files`**: `file_age > max_age` became `>=`. `cleanup_all` passes `max_age=0` to mean "remove everything", but a just-created file has an age of exactly 0 under Windows timestamp granularity and was skipped.
+
+### ✅ Tests
+- `test_image_content.py` — no longer tied to mcp 1's internal module name or the pre-snake_case `model_dump()` fields; verifies the wire contract via `type(...) is ImageContent` and `model_dump(by_alias=True)`.
+
+---
+
 ## [v2.6.2] - 2026-08-25 - Timeout Clamping & Tool Contract
 
 ### 🐛 Bug Fixes

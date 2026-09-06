@@ -2,6 +2,17 @@
 
 本文件记录了 **MCP Feedback Enhanced** 的所有版本更新内容。
 
+## [Unreleased] - 升级至 fastmcp 4 / mcp 2
+
+### 🔧 其他变更
+- **升级 `fastmcp` 至 4.x、`mcp` 至 2.x**（取代 renovate [#239](https://github.com/Minidoracat/mcp-feedback-enhanced/pull/239)、[#240](https://github.com/Minidoracat/mcp-feedback-enhanced/pull/240)）：mcp 1.x 与 fastmcp 3.x 已进入仅收安全修补的维护模式。fastmcp 4 依赖 `mcp>=2,<3`，两者必须一起升级 —— 只合并其中一个会让依赖无法解析、包装不起来（与 #213/#217/#221/#228 同类问题）。服务端代码只需把 `ImageContent` 的构造参数改为 mcp 2 的正式字段名 `mime_type`；wire 格式仍为 `mimeType`。以 stdio 实测 `list_tools`／`get_system_info`，旧协议（2024-11-05）客户端的集成测试全部通过。
+- **修正 `ResourceManager.cleanup_temp_files` 的年龄边界**：`file_age > max_age` 改为 `>=`。`cleanup_all` 以 `max_age=0` 表示「清理所有文件」，但刚创建的文件在 Windows 时间精度下年龄恰为 0，会被漏掉。
+
+### ✅ 测试
+- `test_image_content.py` —— 不再绑定 mcp 1 的内部模块名与 snake_case 之前的 `model_dump()` 字段；改以 `type(...) is ImageContent` 与 `model_dump(by_alias=True)` 验证 wire 契约。
+
+---
+
 ## [v2.6.2] - 2026-08-25 - timeout 钳制与工具返回契约
 
 ### 🐛 问题修复

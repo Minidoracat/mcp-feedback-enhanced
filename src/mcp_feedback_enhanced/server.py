@@ -410,7 +410,7 @@ def process_images(images_data: list[dict]) -> list[ImageContent]:
                 ImageContent(
                     type="image",
                     data=base64.b64encode(image_bytes).decode("ascii"),
-                    mimeType=mime_type,
+                    mime_type=mime_type,
                 )
             )
 

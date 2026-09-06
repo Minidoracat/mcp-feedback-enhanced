@@ -16,7 +16,7 @@ MCP Feedback Enhanced 採用**單一活躍會話 + 持久化 Web UI**的創新�
 
 **後端技術**：
 - Python 3.11+ (核心語言)
-- FastMCP 2.0+ (MCP 協議實現)
+- FastMCP 4.0+ / MCP Python SDK 2.x (MCP 協議實現)
 - FastAPI 0.115+ (Web 框架)
 - uvicorn 0.30+ (ASGI 服務器)
 - WebSocket (實時通信)
