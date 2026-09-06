@@ -177,8 +177,8 @@ pip install uv
 >
 > 桌面应用程序进入 **maintenance-only**：不再新增功能（例如窗口置顶、常驻、提交后保留窗口），只修安全问题与「完全无法启动」的兼容性问题；预计于 v3 移除，届时会在发布说明标明最后一个含桌面 binary 的版本。理由：它只是加载 Web UI 的一层 Tauri 壳，却占了包八成体积、需要三平台 CI 与签名，而反馈的问题多是无法在 CI 重现的平台兼容性（杀毒误判、glibc、Gatekeeper、高 DPI、多显示器）。
 >
-> - **想继续用桌面模式**：把 IDE 的 MCP 配置 `args` 从 `mcp-feedback-enhanced@latest` 改成固定版本（例如 `mcp-feedback-enhanced@2.8.0`），并保留 `MCP_DESKTOP_MODE=true`。2.8.0 起若桌面壳无法启动（被杀毒隔离、glibc 太旧、Gatekeeper 拦下、启动后随即退出），该次会自动改开浏览器并在 stderr 打印网址，不再空等到超时；重启 MCP 服务器后会再尝试桌面。不要固定到 2.6.0 或更早（含未认证命令执行漏洞，见 [SECURITY.md](SECURITY.md)）。
-> - **改用 Web 模式**：移除 `MCP_DESKTOP_MODE` 即可，功能完全相同，提交后标签页会保留、下次调用自动更新内容。想要独立窗口，可在 Chrome／Edge 打开反馈页后选「安装为应用」——但这只是浏览器功能，不是桌面版的等价替代：后端仍由 MCP 调用启动、每次调用仍会打开系统浏览器标签页、端口改变时要重新安装、通知权限需重新授权；窗口置顶请用操作系统工具。
+> - **想继续用桌面模式**：把 IDE 的 MCP 配置 `args` 从 `mcp-feedback-enhanced@latest` 改成固定版本（例如 `mcp-feedback-enhanced@2.8.0`），并保留 `MCP_DESKTOP_MODE=true`。2.8.0 起若桌面壳无法启动（被杀毒隔离、glibc 太旧、Gatekeeper 拦下、启动后随即出错退出），该次会自动改开浏览器并在 stderr 打印网址，不再空等到超时；重启 MCP 服务器后会再尝试桌面。不要固定到 2.6.0 或更早（含未认证命令执行漏洞，见 [SECURITY.md](SECURITY.md)）。
+> - **改用 Web 模式**：移除 `MCP_DESKTOP_MODE` 即可，功能完全相同，提交后标签页会保留、下次调用自动更新内容。想要独立窗口，可在 Chrome／Edge 打开反馈页后选「安装为应用」——但这只是浏览器功能，不是桌面版的等价替代：后端仍由 MCP 调用启动、关掉应用窗口后下次调用会打开在普通浏览器标签页而非该窗口、端口改变时要重新安装、通知权限需重新授权；窗口置顶请用操作系统工具。
 
 **配置文件示例**：
 - 桌面模式：[examples/mcp-config-desktop.json](examples/mcp-config-desktop.json)

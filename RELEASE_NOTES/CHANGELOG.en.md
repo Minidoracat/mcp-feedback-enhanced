@@ -2,6 +2,27 @@
 
 This document records all version updates for **MCP Feedback Enhanced**.
 
+## [v2.8.1] - Unreleased - Desktop Fallback Follow-ups
+
+### 🌟 Highlights
+- stderr notices are now protected writes and never fall back to stdout (the MCP protocol channel) when `sys.stderr` is None.
+- The desktop shell only counts as failed on a non-zero exit, so closing the window yourself no longer demotes the process to web mode; the failure reason is printed for the user.
+
+### 🐛 Bug Fixes
+- **Fallback notices now use a protected stderr write**: the two `sys.stderr.write` calls added in v2.8.0 were the first unguarded stderr writes on the request path; when the host has closed the stderr pipe (EPIPE) they turned the whole tool call into an exception, and `MCP_DESKTOP_MODE` was never cleared so the next call repeated it. They now go through `user_notice`, which fails silently like `debug_log`, and the desktop launch failure reason (exit code, stderr tail) is printed for the user — a Defender quarantine, a glibc mismatch and a Gatekeeper block each need a different remedy, so the reason is what makes a report actionable.
+- **Only a non-zero exit counts as a launch failure**: v2.8.0 treated any exit during the observation window as failure, so a user closing the window within two seconds (exit 0) was demoted to web mode, contradicting the v2.7.2 "window closed" semantics. Exit 0 keeps the existing behaviour.
+- **No stdout fallback when `sys.stderr` is None**: `print(file=sys.stderr)` falls back to `sys.stdout` under pythonw or when the host has closed stderr — that is the MCP protocol channel, and a single notice line breaks client parsing. `debug_log` and `user_notice` now share `_write_stderr`, which captures the stream first and returns when it is None.
+- **Bounded stderr tail read**: the native process may hand its stderr write end to WebView descendants, and `read()` would wait for all of them to close; it now uses `communicate(timeout=1)` and reports only the exit code on timeout.
+
+### 🔧 Other Changes
+- README (three languages): the "Install as app" paragraph claimed "each call still opens a system browser tab", which is wrong while the tab keeps its connection (it is reused); reworded to "once the app window is closed the next call opens a normal browser tab"; "exits right after launch" is now "exits with an error right after launch".
+
+### ✅ Tests
+- `test_desktop_fallback.py` — stderr assertions now run with `MCP_DEBUG=false` (conftest enables debug by default, so the previous tests still passed if the URL regressed to debug-only output); the early-exit tests use a fake binary in a temp directory instead of the committed binary; new cases: a descendant holding stderr does not hang, exit 0 is not a failure, and the two launcher copies are byte-identical (`build_desktop.py` copying had let them drift once).
+- `test_user_notice.py` — stdout must stay empty when `sys.stderr` is None (both `debug_log` and `user_notice`), `user_notice` ignores `MCP_DEBUG`, and a closed stderr does not raise.
+
+---
+
 ## [v2.8.0] - 2026-09-07 - Desktop Application Enters Maintenance-Only
 
 ### 🌟 Highlights

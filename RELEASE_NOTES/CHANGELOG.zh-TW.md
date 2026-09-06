@@ -2,6 +2,27 @@
 
 本文件記錄了 **MCP Feedback Enhanced** 的所有版本更新內容。
 
+## [v2.8.1] - 未發布 - 桌面回退的收尾修正
+
+### 🌟 版本亮點
+- stderr 提示改為受保護寫入，且 `sys.stderr` 為 None 時絕不改寫 stdout（MCP 協定通道）。
+- 桌面殼只在非零退出時才算啟動失敗，使用者自己關窗不再被降級成 Web；失敗原因會印給使用者。
+
+### 🐛 問題修復
+- **降級提示改為受保護的 stderr 寫入**：v2.8.0 新增的兩處 `sys.stderr.write` 是 request path 上第一個未包 try/except 的 stderr 輸出；宿主已關閉 stderr pipe（EPIPE）時會讓整個 tool call 以例外結束，且 `MCP_DESKTOP_MODE` 來不及清掉、下次呼叫重演。改用與 `debug_log` 同樣靜默失敗的 `user_notice`，並把桌面啟動失敗的原因（exit code、stderr 尾段）一併印給使用者——Defender 隔離、glibc、Gatekeeper 三者處置完全不同，沒有原因就無法回報。
+- **只有非零退出才算啟動失敗**：v2.8.0 把觀察期內任何退出都當失敗，使用者在視窗出現後兩秒內自己關掉（exit 0）也會被降級成 Web、與 v2.7.2 的關窗收尾語意衝突。現在 exit 0 沿用既有語意。
+- **`sys.stderr` 為 None 時不再改寫 stdout**：`print(file=sys.stderr)` 在 pythonw 或宿主關閉 stderr 時會退回 `sys.stdout`——那是 MCP 協定通道，一行提示就足以讓客戶端解析失敗。`debug_log` 與 `user_notice` 改共用 `_write_stderr`，先抓住 stream、None 即返回。
+- **stderr 尾段讀取加上限**：native 可能把 stderr 寫端留給 WebView 等後代程序，`read()` 會等到它們全部關閉；改用 `communicate(timeout=1)`，逾時只報 exit code。
+
+### 🔧 其他變更
+- README 三語：「安裝為應用程式」段落的「每次呼叫仍會開系統瀏覽器分頁」不符實際（分頁保持連線時會重用），改為「關掉應用程式視窗後下次呼叫會開在一般瀏覽器分頁」；「隨即退出」改為「隨即出錯退出」。
+
+### ✅ 測試
+- `test_desktop_fallback.py` —— stderr 斷言改在 `MCP_DEBUG=false` 下執行（conftest 預設開 debug，原測試在退回只印 debug log 時仍會通過）；早退測試改用暫存目錄的假 binary，不再依賴入庫的真 binary；新增：後代握著 stderr 不卡住、exit 0 不算失敗、兩份 launcher 位元組一致（`build_desktop.py` 複製曾讓兩份漂移）。
+- `test_user_notice.py` —— `sys.stderr` 為 None 時 stdout 必須為空（`debug_log` 與 `user_notice` 皆測）、`user_notice` 不受 `MCP_DEBUG` 影響、stderr 已關閉時不拋出。
+
+---
+
 ## [v2.8.0] - 2026-09-07 - 桌面應用程式進入僅維護狀態
 
 ### 🌟 版本亮點
