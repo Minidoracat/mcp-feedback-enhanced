@@ -19,7 +19,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Tauri 核心依賴
-tauri = { version = "2.2", features = ["custom-protocol"] }
+tauri = { version = "2.2.1", features = ["custom-protocol"] }
 tauri-plugin-shell = "2.2"
 
 # PyO3 用於 Python 綁定
