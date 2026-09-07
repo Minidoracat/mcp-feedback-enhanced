@@ -2,7 +2,7 @@
 
 This document records all version updates for **MCP Feedback Enhanced**.
 
-## [v2.8.1] - Unreleased - Desktop Fallback Follow-ups
+## [v2.8.1] - 2026-09-07 - Desktop Fallback Follow-ups
 
 ### 🌟 Highlights
 - stderr notices are now protected writes and never fall back to stdout (the MCP protocol channel) when `sys.stderr` is None.
