@@ -1,2 +1,2 @@
-- The desktop application (Tauri shell) is **maintenance-only** from this release: no new features, only security fixes and "cannot launch at all" compatibility fixes, scheduled for removal in v3. The binaries still ship with this release; to keep using it, pin the version in your IDE's MCP configuration (see "Desktop application maintenance status" in the README).
-- When the desktop shell cannot start (quarantined by antivirus, glibc too old, blocked by Gatekeeper, exits right after launch) the server no longer waits silently until the timeout: the process falls back to the browser and prints the URL to stderr.
+- stderr notices are now protected writes and never fall back to stdout (the MCP protocol channel) when `sys.stderr` is None.
+- The desktop shell only counts as failed on a non-zero exit, so closing the window yourself no longer demotes the process to web mode; the failure reason is printed for the user.
